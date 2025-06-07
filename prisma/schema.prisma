@@ -1,0 +1,342 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  phone         String?   @unique
+  passwordHash  String
+  name          String
+  avatar        String?
+  isVerified    Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  profile       Profile?
+  ads          Ad[]
+  reviews      Review[]
+  givenReviews Review[]   @relation("ReviewerReviews")
+  favorites    Favorite[]
+  reports      Report[]   @relation("UserReports")
+  reportedUser Report[]   @relation("ReportedUsers")
+
+  @@map("users")
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  type         ProfileType
+  companyName  String?
+  description  String?
+  location     String?
+  website      String?
+  rating       Float    @default(0)
+  totalReviews Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  nameAr    String
+  nameEn    String
+  nameTr    String
+  nameFr    String
+  nameKu    String
+  slug      String   @unique
+  icon      String?
+  parentId  String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  // Relations
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  ads      Ad[]
+
+  @@map("categories")
+}
+
+model Ad {
+  id              String     @id @default(cuid())
+  userId          String
+  categoryId      String
+  title           String
+  description     String?
+  price           Decimal?   @db.Decimal(12, 2)
+  currency        String     @default("SYP")
+  adType          AdType
+  condition       Condition?
+  location        String?
+  latitude        Decimal?   @db.Decimal(10, 8)
+  longitude       Decimal?   @db.Decimal(11, 8)
+  properties      Json?
+  contactPhone    String?
+  contactWhatsapp String?
+  contactEmail    String?
+  viewsCount      Int        @default(0)
+  isFeatured      Boolean    @default(false)
+  isActive        Boolean    @default(true)
+  expiresAt       DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      Category        @relation(fields: [categoryId], references: [id])
+  media         AdMedia[]
+  reviews       Review[]
+  favorites     Favorite[]
+  reports       Report[]        @relation("AdReports")
+  propertyDetails PropertyDetails? @relation("PropertyDetails")
+  carDetails    CarDetails?     @relation("CarDetails")
+
+  @@map("ads")
+}
+
+model AdMedia {
+  id        String    @id @default(cuid())
+  adId      String
+  filePath  String
+  fileType  MediaType
+  fileSize  Int?
+  fileName  String?
+  sortOrder Int       @default(0)
+  isPrimary Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  // Relations
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("ad_media")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  adId       String
+  reviewerId String
+  sellerId   String
+  rating     Int
+  comment    String?
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  ad       Ad   @relation(fields: [adId], references: [id], onDelete: Cascade)
+  reviewer User @relation("ReviewerReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  seller   User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, adId])
+  @@map("reviews")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  adId      String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ad   Ad   @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, adId])
+  @@map("favorites")
+}
+
+model Report {
+  id          String      @id @default(cuid())
+  reporterId  String
+  adId        String?
+  userId      String?
+  reason      ReportReason
+  description String?
+  status      ReportStatus @default(PENDING)
+  adminNotes  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  reporter User @relation("UserReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  ad       Ad?  @relation("AdReports", fields: [adId], references: [id], onDelete: Cascade)
+  user     User? @relation("ReportedUsers", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+model PropertyDetails {
+  id             String      @id @default(cuid())
+  adId           String      @unique
+  propertyType   PropertyType
+  area           Int?        // Square meters
+  bedrooms       Int?
+  bathrooms      Int?
+  floor          Int?
+  totalFloors    Int?
+  buildYear      Int?
+  hasGarage      Boolean     @default(false)
+  hasGarden      Boolean     @default(false)
+  hasElevator    Boolean     @default(false)
+  hasSecurity    Boolean     @default(false)
+  hasPool        Boolean     @default(false)
+  hasBalcony     Boolean     @default(false)
+  furnished      FurnishedType?
+  heatingType    HeatingType?
+  features       String[]    // Array of additional features
+
+  // Relations
+  ad Ad @relation("PropertyDetails", fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("property_details")
+}
+
+model CarDetails {
+  id                String       @id @default(cuid())
+  adId              String       @unique
+  brand             String
+  model             String
+  year              Int
+  mileage           Int?         // in kilometers
+  fuelType          FuelType
+  transmission      TransmissionType
+  engineSize        Float?       // in liters
+  horsePower        Int?
+  color             String?
+  bodyType          BodyType
+  drivetrain        DrivetrainType?
+  hasAirConditioning Boolean     @default(false)
+  hasLeatherSeats   Boolean      @default(false)
+  hasSunroof        Boolean      @default(false)
+  hasNavigationSystem Boolean    @default(false)
+  hasBluetoothConnectivity Boolean @default(false)
+  hasParkingSensors Boolean      @default(false)
+  hasBackupCamera   Boolean      @default(false)
+  features          String[]     // Array of additional features
+
+  // Relations
+  ad Ad @relation("CarDetails", fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("car_details")
+}
+
+enum ProfileType {
+  PERSONAL
+  COMPANY
+  ADMIN
+}
+
+enum AdType {
+  SALE
+  RENT
+  WANTED
+}
+
+enum Condition {
+  NEW
+  USED
+  EXCELLENT
+  GOOD
+  FAIR
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE_CONTENT
+  FAKE_AD
+  MISLEADING_INFORMATION
+  DUPLICATE
+  OFFENSIVE_LANGUAGE
+  SCAM
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  VILLA
+  OFFICE
+  SHOP
+  WAREHOUSE
+  LAND
+  CHALET
+  STUDIO
+}
+
+enum FurnishedType {
+  FURNISHED
+  SEMI_FURNISHED
+  UNFURNISHED
+}
+
+enum HeatingType {
+  CENTRAL
+  INDIVIDUAL
+  ELECTRIC
+  GAS
+  NONE
+}
+
+enum FuelType {
+  GASOLINE
+  DIESEL
+  HYBRID
+  ELECTRIC
+  LPG
+  CNG
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+  CVT
+  SEMI_AUTOMATIC
+}
+
+enum BodyType {
+  SEDAN
+  HATCHBACK
+  SUV
+  COUPE
+  CONVERTIBLE
+  WAGON
+  PICKUP
+  VAN
+  MINIVAN
+}
+
+enum DrivetrainType {
+  FWD
+  RWD
+  AWD
+  FOURWD
+}

@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PazarSY (بازار سوريا)
 
-## Getting Started
+أكبر منصة إعلانات مبوبة في سوريا - A comprehensive classified ads platform for Syria.
 
-First, run the development server:
+## 🚀 المميزات الحالية (Current Features)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### ✅ تم تطويره (Completed)
+- **تصميم عصري وجذاب** - Modern and attractive UI/UX
+- **دعم متعدد اللغات** - Multi-language support (Arabic, English, Turkish, French, Kurdish)
+- **دعم RTL** - Right-to-left support for Arabic and Kurdish
+- **صفحة رئيسية تفاعلية** - Interactive homepage with hero section
+- **عرض الفئات** - Categories section with beautiful icons
+- **عرض الإعلانات المميزة** - Featured ads showcase
+- **صفحة تفاصيل الإعلان** - Detailed ad page with image gallery
+- **نظام التقييمات والمراجعات** - Reviews and ratings system
+- **نموذج إضافة إعلان** - Post ad form with image upload
+- **تصميم متجاوب** - Fully responsive design
+- **نظام الألوان والخطوط** - Consistent color scheme and typography
+
+### 🛠️ التقنيات المستخدمة (Tech Stack)
+- **Next.js 15** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first CSS framework
+- **Prisma** - Database ORM
+- **PostgreSQL** - Database
+- **Zustand** - State management
+- **Lucide React** - Beautiful icons
+- **Google Fonts** - Cairo font for Arabic, Inter for other languages
+
+### 🗂️ بنية المشروع (Project Structure)
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── ads/[id]/          # Ad details page
+│   ├── post-ad/           # Post ad page
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Homepage
+│   └── globals.css        # Global styles
+├── components/            # Reusable components
+│   ├── ads/               # Ad-related components
+│   ├── layout/            # Layout components (Header, Footer)
+│   ├── reviews/           # Reviews and ratings
+│   ├── sections/          # Homepage sections
+│   └── ui/                # Base UI components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utilities and configurations
+├── store/                 # Zustand state management
+└── types/                 # TypeScript type definitions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 التصميم (Design)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### الألوان (Colors)
+- **Primary**: Sky-600 (#0284c7)
+- **Secondary**: Gray-200 (#e5e7eb)
+- **Accent**: Orange-500 (للأزرار المهمة)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### الخطوط (Fonts)
+- **Arabic/Kurdish**: Cairo
+- **English/Turkish/French**: Inter
 
-## Learn More
+## 🚧 قيد التطوير (In Progress)
 
-To learn more about Next.js, take a look at the following resources:
+### 📋 المخطط للإسبوع القادم (Next Week)
+1. **نظام المصادقة** - Authentication system (NextAuth.js)
+2. **ربط قاعدة البيانات** - Database integration with Prisma
+3. **رفع الصور** - Image upload functionality
+4. **البحث والفلترة** - Search and filtering system
+5. **لوحة تحكم المستخدم** - User dashboard
+6. **نظام المفضلة** - Favorites system
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 🔮 المخطط للمستقبل (Future Plans)
+- لوحة تحكم الإدارة
+- نظام الدفع
+- الإشعارات
+- تطبيق الموبايل
+- API للمطورين
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 تشغيل المشروع (Getting Started)
 
-## Deploy on Vercel
+### المتطلبات (Prerequisites)
+- Node.js 18+ 
+- PostgreSQL
+- npm or yarn
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### التثبيت (Installation)
+```bash
+# استنساخ المشروع
+git clone [repository-url]
+cd pazar_syria
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# تثبيت التبعيات
+npm install
+
+# إعداد قاعدة البيانات
+cp .env.example .env
+# قم بتعديل متغيرات البيئة في ملف .env
+
+# تشغيل المايقريشن
+npx prisma migrate dev
+
+# تشغيل السيرفر
+npm run dev
+```
+
+المشروع سيعمل على `http://localhost:3000`
+
+## 📱 الصفحات المتاحة (Available Pages)
+
+- `/` - الصفحة الرئيسية (Homepage)
+- `/ads/[id]` - تفاصيل الإعلان (Ad Details)
+- `/post-ad` - إضافة إعلان (Post Ad)
+
+## 🔧 الأوامر المتاحة (Available Scripts)
+
+```bash
+npm run dev          # تشغيل السيرفر للتطوير
+npm run build        # بناء المشروع للإنتاج
+npm run start        # تشغيل المشروع في الإنتاج
+npm run lint         # فحص الكود
+```
+
+## 📄 الترخيص (License)
+
+MIT License - راجع ملف LICENSE للتفاصيل
+
+---
+
+**تم تطويره بـ ❤️ لخدمة المجتمع السوري**
