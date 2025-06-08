@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { 
@@ -131,11 +131,59 @@ export default function AdDetailsPage({ params }: { params: Promise<{ id: string
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
   const [adData, setAdData] = useState<AdData | null>(null)
+  const [similarAds, setSimilarAds] = useState<AdData[]>([])
+
+  // Fetch similar ads
+  const fetchSimilarAds = useCallback(async (categorySlug: string, currentAdId: string) => {
+    try {
+      const response = await fetch(`/api/ads?category=${categorySlug}&limit=3&exclude=${currentAdId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSimilarAds(data.ads || [])
+      }
+    } catch (error) {
+      console.error('Error fetching similar ads:', error)
+    }
+  }, [])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showFullScreenGallery, setShowFullScreenGallery] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [videoError, setVideoError] = useState(false)
+  const [showMessageModal, setShowMessageModal] = useState(false)
+  const [messageText, setMessageText] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
+
+  // Send message handler
+  const handleSendMessage = async () => {
+    if (!messageText.trim()) return
+    
+    setSendingMessage(true)
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientId: adData?.user.id,
+          adId: adData?.id,
+          content: messageText
+        })
+      })
+      
+      if (response.ok) {
+        setMessageText('')
+        setShowMessageModal(false)
+        alert('تم إرسال الرسالة بنجاح!')
+      } else {
+        alert('فشل في إرسال الرسالة. يرجى المحاولة مرة أخرى.')
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      alert('حدث خطأ أثناء إرسال الرسالة')
+    } finally {
+      setSendingMessage(false)
+    }
+  }
 
   // Helper functions
   const getCurrentImageUrl = () => {
@@ -173,6 +221,11 @@ export default function AdDetailsPage({ params }: { params: Promise<{ id: string
         }
         const data = await response.json()
         setAdData(data)
+        
+        // Fetch similar ads
+        if (data.category?.slug) {
+          fetchSimilarAds(data.category.slug, id)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تحميل الإعلان')
       } finally {
@@ -180,35 +233,7 @@ export default function AdDetailsPage({ params }: { params: Promise<{ id: string
       }
     }
     handleParams()
-  }, [params])
-
-  // Mock similar ads for now
-  const similarAds = [
-    {
-      id: '1',
-      title: 'شقة مشابهة للبيع',
-      price: 50000000,
-      currency: 'SYP',
-      location: 'دمشق',
-      imageUrl: '/placeholder-ad.jpg',
-      createdAt: new Date().toISOString(),
-      category: 'عقارات',
-      adType: 'SALE' as const,
-      views: 150
-    },
-    {
-      id: '2', 
-      title: 'شقة أخرى مشابهة',
-      price: 45000000,
-      currency: 'SYP',
-      location: 'دمشق',
-      imageUrl: '/placeholder-ad.jpg',
-      createdAt: new Date().toISOString(),
-      category: 'عقارات',
-      adType: 'SALE' as const,
-      views: 120
-    }
-  ]
+  }, [params, fetchSimilarAds])
 
   if (loading) {
     return <LoadingOverlay isLoading={true} />
@@ -909,14 +934,33 @@ export default function AdDetailsPage({ params }: { params: Promise<{ id: string
                 </div>
 
                 <div className="space-y-2">
-                  <Button className="w-full" size="lg">
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => window.open(`tel:${adData.contactPhone}`, '_self')}
+                  >
                     <Phone className="w-4 h-4 mr-2" />
                     اتصل الآن
                   </Button>
-                  <Button variant="outline" className="w-full" size="lg">
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => setShowMessageModal(true)}
+                  >
                     <MessageCircle className="w-4 h-4 mr-2" />
-                    واتساب
+                    إرسال رسالة
                   </Button>
+                  {adData.contactWhatsapp && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => window.open(`https://wa.me/${adData.contactWhatsapp}`, '_blank')}
+                    >
+                      📱 واتساب
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -927,11 +971,31 @@ export default function AdDetailsPage({ params }: { params: Promise<{ id: string
                 <CardTitle>إعلانات مشابهة</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {similarAds.map((ad) => (
-                  <div key={ad.id} className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0">
-                    <AdCard {...ad} />
-                  </div>
-                ))}
+                {similarAds.length > 0 ? (
+                  similarAds.map((ad) => {
+                    // Process similar ads like the main ads page
+                    const primaryImage = ad.media?.find((m: { isPrimary: boolean; fileType: string; filePath: string }) => m.isPrimary && m.fileType === 'IMAGE')?.filePath
+                    const firstImage = ad.media?.find((m: { fileType: string; filePath: string }) => m.fileType === 'IMAGE')?.filePath
+                    const finalImage = primaryImage || firstImage || ad.media?.[0]?.filePath || '/placeholder-ad.jpg'
+                    
+                    const processedAd = {
+                      ...ad,
+                      imageUrl: finalImage,
+                      category: typeof ad.category === 'string' ? ad.category : ad.category?.nameAr || 'عام',
+                      views: ad.viewsCount || 0,
+                      price: ad.price ?? null,
+                      location: ad.location ?? null
+                    }
+                    
+                    return (
+                      <div key={ad.id} className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0">
+                        <AdCard {...processedAd} viewType="list" />
+                      </div>
+                    )
+                  })
+                ) : (
+                  <p className="text-gray-500 text-center py-4">لا توجد إعلانات مشابهة حالياً</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1077,6 +1141,54 @@ export default function AdDetailsPage({ params }: { params: Promise<{ id: string
               )}
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* Message Modal */}
+      {showMessageModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>إرسال رسالة</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMessageModal(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  رسالة إلى {adData?.user.name}
+                </label>
+                <textarea
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder="اكتب رسالتك هنا..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none h-32 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!messageText.trim() || sendingMessage}
+                  className="flex-1"
+                >
+                  {sendingMessage ? 'جاري الإرسال...' : 'إرسال'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMessageModal(false)}
+                >
+                  إلغاء
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

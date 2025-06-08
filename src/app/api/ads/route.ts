@@ -13,9 +13,10 @@ export async function GET(request: NextRequest) {
     const adType = searchParams.get('adType') || searchParams.get('type')
     const search = searchParams.get('search')
     const featured = searchParams.get('featured')
+    const exclude = searchParams.get('exclude')
     const sort = searchParams.get('sort') || 'newest'
 
-    console.log('🔍 API Filter Debug:', { category, adType, search, page, limit })
+    console.log('🔍 API Filter Debug:', { category, adType, search, page, limit, exclude })
 
     const skip = (page - 1) * limit
 
@@ -47,6 +48,13 @@ export async function GET(request: NextRequest) {
 
     if (featured === 'true') {
       where.isFeatured = true
+    }
+
+    if (exclude) {
+      where.id = {
+        not: exclude
+      }
+      console.log('🚫 Excluding ad:', exclude)
     }
 
     // Build order by clause

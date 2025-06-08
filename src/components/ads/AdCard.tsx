@@ -66,6 +66,17 @@ export function AdCard({
               alt={title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
+              unoptimized={imageUrl?.startsWith('http') || imageUrl?.startsWith('/images')}
+              onError={(e) => {
+                console.log('Image load error for:', imageUrl, 'Category:', category)
+                const target = e.currentTarget as HTMLImageElement
+                if (target.src !== `/api/placeholder?width=400&height=300&text=${encodeURIComponent(category)}`) {
+                  target.src = `/api/placeholder?width=400&height=300&text=${encodeURIComponent(category)}`
+                }
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully:', imageUrl)
+              }}
             />
             
             {/* Favorite button */}
@@ -175,6 +186,17 @@ export function AdCard({
           alt={title}
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-300"
+          unoptimized={imageUrl?.startsWith('http') || imageUrl?.startsWith('/images')}
+          onError={(e) => {
+            console.log('Grid Image load error for:', imageUrl, 'Category:', category)
+            const target = e.currentTarget as HTMLImageElement
+            if (target.src !== `/api/placeholder?width=400&height=300&text=${encodeURIComponent(category)}`) {
+              target.src = `/api/placeholder?width=400&height=300&text=${encodeURIComponent(category)}`
+            }
+          }}
+          onLoad={() => {
+            console.log('Grid Image loaded successfully:', imageUrl)
+          }}
         />
         
         {/* Favorite button */}

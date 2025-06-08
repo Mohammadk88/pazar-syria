@@ -135,7 +135,7 @@ export function HeroSection() {
             </Button>
           </Link>
           
-          <Link href="/search">
+          <Link href="/ads">
             <Button
               size="lg"
               variant="outline"

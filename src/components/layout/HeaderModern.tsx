@@ -71,9 +71,9 @@ export function Header() {
 
   const navLinks = [
     { href: '/', label: 'الرئيسية' },
-    { href: '/search?category=real-estate', label: 'العقارات' },
-    { href: '/search?category=cars', label: 'السيارات' },
-    { href: '/search', label: 'جميع الإعلانات' },
+    { href: '/ads?category=real-estate', label: 'العقارات' },
+    { href: '/ads?category=cars', label: 'السيارات' },
+    { href: '/ads', label: 'جميع الإعلانات' },
   ]
 
   const languages = [

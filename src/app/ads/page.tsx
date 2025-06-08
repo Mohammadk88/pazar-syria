@@ -23,6 +23,7 @@ interface MediaItem {
   filePath: string
   isPrimary: boolean
   type: string
+  fileType?: 'IMAGE' | 'VIDEO'
 }
 
 interface AdData {
@@ -110,12 +111,21 @@ function AdsListPageContent() {
 
       if (!response.ok) throw new Error(data.error)
 
-      const adsWithImages = data.ads.map((ad: AdData) => ({
-        ...ad,
-        category: typeof ad.category === 'string' ? ad.category : (ad.category as { nameAr: string })?.nameAr || 'عام',
-        imageUrl: ad.media?.find((m: MediaItem) => m.isPrimary)?.filePath || ad.media?.[0]?.filePath || '/placeholder-ad.jpg',
-        views: ad.viewsCount || ad.views || 0
-      }))
+      const adsWithImages = data.ads.map((ad: AdData) => {
+        const primaryImage = ad.media?.find((m: MediaItem) => m.isPrimary && (m.fileType === 'IMAGE' || m.type === 'image'))?.filePath
+        const firstImage = ad.media?.find((m: MediaItem) => m.fileType === 'IMAGE' || m.type === 'image')?.filePath
+        const fallbackImage = ad.media?.[0]?.filePath
+        const finalImage = primaryImage || firstImage || fallbackImage || '/placeholder-ad.jpg'
+        
+        console.log('🔍 Ad:', ad.title, 'Media count:', ad.media?.length, 'Final image:', finalImage)
+        
+        return {
+          ...ad,
+          category: typeof ad.category === 'string' ? ad.category : (ad.category as { nameAr: string })?.nameAr || 'عام',
+          imageUrl: finalImage,
+          views: ad.viewsCount || ad.views || 0
+        }
+      })
 
       if (append) {
         setAds(prev => [...prev, ...adsWithImages])

@@ -30,6 +30,8 @@ model User {
   favorites    Favorite[]
   reports      Report[]   @relation("UserReports")
   reportedUser Report[]   @relation("ReportedUsers")
+  sentMessages Message[]  @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 
   @@map("users")
 }
@@ -107,6 +109,7 @@ model Ad {
   reports       Report[]        @relation("AdReports")
   propertyDetails PropertyDetails? @relation("PropertyDetails")
   carDetails    CarDetails?     @relation("CarDetails")
+  messages      Message[]
 
   @@map("ads")
 }
@@ -339,4 +342,21 @@ enum DrivetrainType {
   RWD
   AWD
   FOURWD
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  senderId    String
+  recipientId String
+  adId        String?
+  content     String
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  sender    User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  ad        Ad?  @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
 }
